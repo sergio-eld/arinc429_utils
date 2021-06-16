@@ -198,18 +198,10 @@ namespace eld
                        defines_name_type<T>();
             }
 
-            // TODO: move to detail
-            //            template <typename T, bool /*defines_getter*/ = false>
-            //            struct resolve_getter
-            //            {
-            //                using type =
-            //            };
-
             template<typename T>
             struct data_descriptor_traits
             {
                 static_assert(is_valid_data<T>(), "Type is not a valid arinc429 data type");
-                // TODO: validate msb > lsb (here>)
 
                 /**
                  * Get Least Significant Bit index. Index starts with 1.
@@ -237,26 +229,27 @@ namespace eld
             class get_data_descriptor
             {
                 struct placeholder_t;
-                using filtered_t = detail::filter_t<TupleDataDescriptors,
-                    std::is_same<placeholder_t, NameType>>;
-                static_assert(!std::is_void<NotFoundPlaceholder>() || std::tuple_size<filtered_t>() != 0,
+                using filtered_t =
+                    detail::filter_t<TupleDataDescriptors, std::is_same<placeholder_t, NameType>>;
+                static_assert(!std::is_void<NotFoundPlaceholder>() ||
+                                  std::tuple_size<filtered_t>() != 0,
                               "Data descriptor not found!");
-                static_assert(std::tuple_size<filtered_t>() < 2, "Multiple data descriptors with same name were found");
+                static_assert(std::tuple_size<filtered_t>() < 2,
+                              "Multiple data descriptors with same name were found");
 
             public:
                 using type = typename std::tuple_element<0, filtered_t>::type;
             };
 
-            template <typename NameType, typename WordT, typename NotFoundPlaceholder = void>
-            using get_data_descriptor_t = typename get_data_descriptor<NameType, WordT, NotFoundPlaceholder>::type;
+            template<typename NameType, typename WordT, typename NotFoundPlaceholder = void>
+            using get_data_descriptor_t =
+                typename get_data_descriptor<NameType, WordT, NotFoundPlaceholder>::type;
 
             // TODO: ranges of defined bits
             //            template <template <typename ...> class WordT, typename ...
             //            DataDescriptors> struct definided_bits : std::index_sequence<>
 
-
         }
-
 
         namespace detail
         {
@@ -333,6 +326,79 @@ namespace eld
                 DataDescriptor()(retVal, wordRaw, tag_get());
             }
 
+            template<typename T>
+            void set_integral_value(const T & /*value*/,
+                                    traits::word_raw_type & /*wordRaw*/,
+                                    size_t /*lsb*/,
+                                    size_t /*msb*/,
+                                    std::false_type /*is_signed*/)
+            {
+                // TODO: implement
+            }
+
+            template<typename T>
+            void set_integral_value(const T & /*value*/,
+                                    traits::word_raw_type & /*wordRaw*/,
+                                    size_t /*lsb*/,
+                                    size_t /*msb*/,
+                                    std::true_type /*is_signed*/)
+            {
+                // TODO: implement
+            }
+
+            template<typename T>
+            void set_value(const T &value,
+                           traits::word_raw_type &wordRaw,
+                           size_t lsb,
+                           size_t msb,
+                           double /*scaleFactor*/,
+                           std::false_type /*is_floating_point*/)
+            {
+                static_assert(!std::is_floating_point<T>(), "Only integral types are expected!");
+                detail::set_integral_value(value, wordRaw, lsb, msb, std::is_signed<T>());
+            }
+
+            template<typename T>
+            void set_value(const T &value,
+                           traits::word_raw_type & /*wordRaw*/,
+                           size_t lsb,
+                           size_t msb,
+                           double scaleFactor,
+                           std::true_type /*is_floating_point*/)
+            {
+                static_assert(std::is_floating_point<T>(),
+                              "Only floating point types are expected!");
+
+                // TODO: implement
+            }
+
+            template<typename DataDescriptor,
+                     typename ValueType =
+                         typename traits::data_descriptor_traits<DataDescriptor>::value_type>
+            void set_value(const ValueType &value,
+                           traits::word_raw_type &wordRaw,
+                           std::false_type /*defines_getter*/)
+            {
+                using traits_t = traits::data_descriptor_traits<DataDescriptor>;
+                using scale_factor_t = typename traits_t::scale_factor_type;
+                set_value(value,
+                          wordRaw,
+                          traits_t::lsb(),
+                          traits_t::msb(),
+                          double(scale_factor_t::num / scale_factor_t::den),
+                          std::is_floating_point<ValueType>());
+            }
+
+            template<typename DataDescriptor,
+                     typename ValueType =
+                         typename traits::data_descriptor_traits<DataDescriptor>::value_type>
+            void set_value(const ValueType &value,
+                           traits::word_raw_type &wordRaw,
+                           std::true_type /*defines_getter*/)
+            {
+                DataDescriptor()(value, wordRaw, tag_set());
+            }
+
         }
 
         template<
@@ -363,6 +429,29 @@ namespace eld
                                               traits::defines_getter<DataDescriptor, ValueType>());
         }
 
+        template<
+            typename T,
+            typename = typename std::enable_if<
+                detail::disjunction<std::is_floating_point<T>, std::is_integral<T>>::value>::type>
+        void set_value(const T &value,
+                       traits::word_raw_type &wordRaw,
+                       size_t lsb,
+                       size_t msb,
+                       double scaleFactor = 1.0)
+        {
+            detail::set_value(value, wordRaw, lsb, msb, scaleFactor, std::is_floating_point<T>());
+        }
+
+        template<typename DataDescriptor,
+                 typename ValueType =
+                     typename traits::data_descriptor_traits<DataDescriptor>::value_type>
+        void set_value(const ValueType &value, traits::word_raw_type &wordRaw)
+        {
+            detail::get_value<DataDescriptor>(value,
+                                              wordRaw,
+                                              traits::defines_getter<DataDescriptor, ValueType>());
+        }
+
         /**
          *
          * @tparam DataDescriptors
@@ -377,19 +466,37 @@ namespace eld
             // TODO: check that struct types are unique
 
         public:
-            constexpr explicit word_generic(traits::word_raw_type rawWord) : rawWord_(rawWord) {}
+            constexpr explicit word_generic(traits::word_raw_type rawWord)   //
+              : rawWord_(rawWord)
+            {
+            }
 
             // TODO: implement get and set via index, struct type (name) and string name
-            template<typename DataNameT,
+            template<typename NameType,
                      typename = typename std::enable_if<true /*TODO: implement*/>::type>
             constexpr auto get()
             {
-                using data_descriptor_t = traits::get_data_descriptor_t<DataNameT, std::tuple<DataDescriptors...>>;
+                using data_descriptor_t =
+                    traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
                 typename data_descriptor_t::value_type retVal{};
                 get_value<data_descriptor_t>(retVal, rawWord_);
 
                 return retVal;
+            }
+
+            template<
+                typename NameType,
+                typename T,
+                typename = typename std::enable_if<
+                    true /*TODO: check if name exists and T corresponds to assigned ValueType*/>::
+                    type>
+            constexpr void set(const T &value)
+            {
+                using data_descriptor_t =
+                    traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
+
+                set_value<data_descriptor_t>(value, rawWord_);
             }
 
         private:

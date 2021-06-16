@@ -1,8 +1,6 @@
 ﻿
 #include "arinc429/arinc429.h"
 
-
-
 int main()
 {
     constexpr auto sum = std::integral_constant<int, eld::arinc429::detail::sum(4, 8, 15, 16) - 1>();
@@ -15,6 +13,7 @@ int main()
     word_with_label_t wordWithLabel{07};
 
     auto labelValue = wordWithLabel.get<label>();
+    wordWithLabel.set<label>(011);
 
     return 0;
 }
