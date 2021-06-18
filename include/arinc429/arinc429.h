@@ -10,9 +10,6 @@
 #include <cassert>
 #include <utility>
 
-#include <bitset>
-#include <iostream>
-
 /**
  * This is a header-only utility library for ARINC 429 data protocol.
  * The goals of this library are to provide (by priority):
@@ -363,7 +360,8 @@ namespace eld
                 uint32_t clamped_value = (uint32_t(value) << unused_bit_count) >> unused_bit_count;
                 clamped_value = clamped_value << (lsb - 1);
 
-                uint32_t right_erase = std::numeric_limits<traits::word_raw_type>::max() << msb;
+                uint32_t right_erase =
+                    msb < 32 ? std::numeric_limits<traits::word_raw_type>::max() << msb : 0;
                 uint32_t left_erase =
                     lsb > 1 ? std::numeric_limits<traits::word_raw_type>::max() >> (32 - lsb + 1) :
                               0;

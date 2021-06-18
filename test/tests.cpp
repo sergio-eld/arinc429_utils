@@ -3,250 +3,295 @@
 
 #include <gtest/gtest.h>
 
-#include <limits>
 #include <cmath>
 
-namespace elda = eld;
+TEST(ElementaryTests, RewriteDataInHead)
+{
+    struct data : eld::arinc429::data_descriptor<data, 1, 8, uint8_t> {};
+
+    using word_t =
+    eld::arinc429::word_generic<data>;
+
+    word_t word{ 0 };
+    word.set<data>(255u);
+
+    constexpr uint8_t exp_label = 32;
+    word.set<data>(exp_label);
+
+    EXPECT_EQ(exp_label, word.get<data>());
+}
+
+TEST(ElementaryTests, RewriteDataInCenter)
+{
+    struct data : eld::arinc429::data_descriptor<data, 17, 24, uint8_t> {};
+
+    using word_t =
+    eld::arinc429::word_generic<data>;
+
+    word_t word{ 0 };
+    word.set<data>(255u);
+
+    constexpr uint8_t exp_data = 32;
+    word.set<data>(exp_data);
+
+    EXPECT_EQ(exp_data, word.get<data>());
+}
+
+TEST(ElementaryTests, RewriteDataInTail)
+{
+    struct data : eld::arinc429::data_descriptor<data, 25, 32, uint8_t> {};
+
+    using word_t =
+    eld::arinc429::word_generic<data>;
+
+    word_t word{ 0 };
+    word.set<data>(255u);
+
+    constexpr uint8_t exp_data = 32;
+    word.set<data>(exp_data);
+
+    EXPECT_EQ(exp_data, word.get<data>());
+}
 
 TEST(ElementaryTests, SingleUint32DataInHead)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 10, uint32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 10, uint32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = uint32_t(std::pow(2, 10) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleUint32DataInCenter)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 11, 20, uint32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 11, 20, uint32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = uint32_t(std::pow(2, 10) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleUint32DataInTail)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 21, 32, uint32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 21, 32, uint32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = uint32_t(std::pow(2, 10) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleInt32DataInHead)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 10, int32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 10, int32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = - int32_t(std::pow(2, 9) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleInt32DataInCenter)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 11, 20, int32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 11, 20, int32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = - int32_t(std::pow(2, 9) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleInt32DataInTail)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 21, 32, int32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 21, 32, int32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = - int32_t(std::pow(2, 9) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleDoubleDataInHead)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 10, double, std::ratio<1, 100>> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 10, double, std::ratio<1, 100>> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const double exp_data_0 = 3.33;
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleDoubleDataInCenter)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 11, 20, double, std::ratio<1, 100>> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 11, 20, double, std::ratio<1, 100>> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const double exp_data_0 = 3.33;
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, SingleDoubleDataInTail)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 21, 32, double, std::ratio<1, 100>> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 21, 32, double, std::ratio<1, 100>> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const double exp_data_0 = 3.33;
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, FullCamapcityDataUint)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 32, uint32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 32, uint32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = uint32_t(std::pow(2, 32) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, FullCamapcityDataInt)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 32, int32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 32, int32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = - int32_t(std::pow(2, 31) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, FullCamapcityDataDouble)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 32, double, std::ratio<3, 100>> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 32, double, std::ratio<3, 100>> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0>;
+    using word_t =
+    eld::arinc429::word_generic<data_0>;
 
     const auto exp_data_0 = -(std::pow(2, 31) - 1) * 0.03;
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
+    word.set<data_0>(exp_data_0);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
 }
 
 TEST(ElementaryTests, MultipleUint32Data)
 {
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 1, 10, uint32_t> {};
-    struct data_1 : elda::arinc429::data_descriptor<data_1, 11, 20, uint32_t> {};
-    struct data_2 : elda::arinc429::data_descriptor<data_2, 21, 32, uint32_t> {};
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 1, 10, uint32_t> {};
+    struct data_1 : eld::arinc429::data_descriptor<data_1, 11, 20, uint32_t> {};
+    struct data_2 : eld::arinc429::data_descriptor<data_2, 21, 32, uint32_t> {};
 
-    using word_with_label_t =
-    elda::arinc429::word_generic<data_0, data_1, data_2>;
+    using word_t =
+    eld::arinc429::word_generic<data_0, data_1, data_2>;
 
     const auto exp_data_0 = uint32_t(std::pow(2, 10) - 1);
     const auto exp_data_1 = 9;
     const auto exp_data_2 = uint32_t(std::pow(2, 12) - 1);
 
-    word_with_label_t wordWithLabel{ 0 };
+    word_t word{ 0 };
 
-    wordWithLabel.set<data_0>(exp_data_0);
-    wordWithLabel.set<data_1>(exp_data_1);
-    wordWithLabel.set<data_2>(exp_data_2);
+    word.set<data_0>(exp_data_0);
+    word.set<data_1>(exp_data_1);
+    word.set<data_2>(exp_data_2);
 
-    EXPECT_EQ(exp_data_0, wordWithLabel.get<data_0>());
-    EXPECT_EQ(exp_data_1, wordWithLabel.get<data_1>());
-    EXPECT_EQ(exp_data_2, wordWithLabel.get<data_2>());
+    EXPECT_EQ(exp_data_0, word.get<data_0>());
+    EXPECT_EQ(exp_data_1, word.get<data_1>());
+    EXPECT_EQ(exp_data_2, word.get<data_2>());
 }
 
 TEST(SetWordTest, ComplexWordWithNegDoubleData)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 11, 13, uint8_t>
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 11, 13, uint8_t>
     {
     };
-    struct data_1 : elda::arinc429::data_descriptor<data_1, 14, 15, uint8_t>
+    struct data_1 : eld::arinc429::data_descriptor<data_1, 14, 15, uint8_t>
     {
     };
-    struct data_2 : elda::arinc429::data_descriptor<data_2, 18, 29, double, std::ratio<88, 1000>>
+    struct data_2 : eld::arinc429::data_descriptor<data_2, 18, 29, double, std::ratio<88, 1000>>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
     using word_with_label_t =
-        elda::arinc429::word_generic<label, data_0, data_1, data_2, state_matrix, parity>;
+        eld::arinc429::word_generic<label, data_0, data_1, data_2, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0162;
     constexpr uint8_t exp_data_0 = 6;
@@ -267,27 +312,27 @@ TEST(SetWordTest, ComplexWordWithNegDoubleData)
 
 TEST(GetWordTest, ComplexWordWithNegDoubleData)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data_0 : elda::arinc429::data_descriptor<data_0, 11, 13, uint8_t>
+    struct data_0 : eld::arinc429::data_descriptor<data_0, 11, 13, uint8_t>
     {
     };
-    struct data_1 : elda::arinc429::data_descriptor<data_1, 14, 15, uint8_t>
+    struct data_1 : eld::arinc429::data_descriptor<data_1, 14, 15, uint8_t>
     {
     };
-    struct data_2 : elda::arinc429::data_descriptor<data_2, 18, 29, double, std::ratio<88, 1000>>
+    struct data_2 : eld::arinc429::data_descriptor<data_2, 18, 29, double, std::ratio<88, 1000>>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
     using word_with_label_t =
-        elda::arinc429::word_generic<label, data_0, data_1, data_2, state_matrix, parity>;
+        eld::arinc429::word_generic<label, data_0, data_1, data_2, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0162;
     constexpr uint8_t exp_data_0 = 6;
@@ -311,20 +356,20 @@ TEST(GetWordTest, ComplexWordWithNegDoubleData)
 
 TEST(SetAndGetWordTests, Uint32DataWord)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data : elda::arinc429::data_descriptor<data, 9, 29, uint32_t>
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, uint32_t>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
-    using word_with_label_t = elda::arinc429::word_generic<label, data, state_matrix, parity>;
+    using word_with_label_t = eld::arinc429::word_generic<label, data, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0312;
     constexpr uint32_t exp_data = 1048575;
@@ -346,20 +391,20 @@ TEST(SetAndGetWordTests, Uint32DataWord)
 
 TEST(SetAndGetWordTests, Int32DataWord)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data : elda::arinc429::data_descriptor<data, 9, 29, int32_t>
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, int32_t>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
-    using word_with_label_t = elda::arinc429::word_generic<label, data, state_matrix, parity>;
+    using word_with_label_t = eld::arinc429::word_generic<label, data, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0377;
     constexpr int32_t exp_data = -9;
@@ -381,20 +426,20 @@ TEST(SetAndGetWordTests, Int32DataWord)
 
 TEST(SetAndGetWordTests, PosDoubleDataWord)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data : elda::arinc429::data_descriptor<data, 9, 29, double, std::ratio<23, 1000>>
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, double, std::ratio<23, 1000>>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
-    using word_with_label_t = elda::arinc429::word_generic<label, data, state_matrix, parity>;
+    using word_with_label_t = eld::arinc429::word_generic<label, data, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0112;
     constexpr double data_scale_factor = 0.023;
@@ -417,20 +462,20 @@ TEST(SetAndGetWordTests, PosDoubleDataWord)
 
 TEST(SetAndGetWordTests, NegDoubleDataWord)
 {
-    struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
+    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
     };
-    struct data : elda::arinc429::data_descriptor<data, 9, 29, double, std::ratio<23, 1000>>
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, double, std::ratio<23, 1000>>
     {
     };
-    struct state_matrix : elda::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
+    struct state_matrix : eld::arinc429::data_descriptor<state_matrix, 30, 31, uint8_t>
     {
     };
-    struct parity : elda::arinc429::data_descriptor<parity, 32, 32, uint8_t>
+    struct parity : eld::arinc429::data_descriptor<parity, 32, 32, uint8_t>
     {
     };
 
-    using word_with_label_t = elda::arinc429::word_generic<label, data, state_matrix, parity>;
+    using word_with_label_t = eld::arinc429::word_generic<label, data, state_matrix, parity>;
 
     constexpr uint8_t exp_label = 0112;
     constexpr double data_scale_factor = 0.023;
