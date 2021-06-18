@@ -467,9 +467,16 @@ namespace eld
 
         public:
             constexpr explicit word_generic(traits::word_raw_type rawWord)   //
-              : rawWord_(rawWord)
+              : raw_word_(rawWord)
             {
             }
+
+            word_generic(const word_generic&) = default;
+            word_generic(word_generic&&) noexcept = default;
+
+            word_generic& operator=(const word_generic&) = default;
+            word_generic& operator=(word_generic&&) noexcept = default;
+
 
             // TODO: implement get and set via index, struct type (name) and string name
             template<typename NameType,
@@ -480,7 +487,7 @@ namespace eld
                     traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
                 typename data_descriptor_t::value_type retVal{};
-                get_value<data_descriptor_t>(retVal, rawWord_);
+                get_value<data_descriptor_t>(retVal, raw_word_);
 
                 return retVal;
             }
@@ -496,11 +503,31 @@ namespace eld
                 using data_descriptor_t =
                     traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
-                set_value<data_descriptor_t>(value, rawWord_);
+                set_value<data_descriptor_t>(value, raw_word_);
+            }
+
+            traits::word_raw_type get_raw() const
+            {
+                return raw_word_;
+            }
+
+            void set_raw(traits::word_raw_type rawWord)
+            { raw_word_ = rawWord;
+            }
+
+            explicit operator traits::word_raw_type() const
+            {
+                return get_raw();
+            }
+
+            template <typename ... ArgsT>
+            explicit operator word_generic<ArgsT...>() const
+            {
+                return word_generic<ArgsT...>(get_raw());
             }
 
         private:
-            traits::word_raw_type rawWord_;
+            traits::word_raw_type raw_word_;
         };
 
         // TODO: add customization for data retrieval.
