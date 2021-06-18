@@ -471,6 +471,13 @@ namespace eld
             {
             }
 
+            word_generic(const word_generic&) = default;
+            word_generic(word_generic&&) noexcept = default;
+
+            word_generic& operator=(const word_generic&) = default;
+            word_generic& operator=(word_generic&&) noexcept = default;
+
+
             // TODO: implement get and set via index, struct type (name) and string name
             template<typename NameType,
                      typename = typename std::enable_if<true /*TODO: implement*/>::type>
@@ -497,6 +504,27 @@ namespace eld
                     traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
                 set_value<data_descriptor_t>(value, rawWord_);
+            }
+
+            traits::word_raw_type getRaw() const
+            {
+                return rawWord_;
+            }
+
+            void setRaw(traits::word_raw_type rawWord)
+            {
+                rawWord_ = rawWord;
+            }
+
+            explicit operator traits::word_raw_type() const
+            {
+                return getRaw();
+            }
+
+            template <typename ... ArgsT>
+            explicit operator word_generic<ArgsT...>() const
+            {
+                return word_generic<ArgsT...>(getRaw());
             }
 
         private:
