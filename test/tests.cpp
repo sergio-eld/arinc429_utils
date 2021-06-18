@@ -46,7 +46,7 @@ TEST(SetWordTest, ComplexWordWithNegDoubleData)
     // EXPECT_EQ(exp_parity, wordWithLabel.get<parity>());
 }
 
-TEST(GetWordTest, ComplexWordWithNegDoubleData)
+TEST(GetWordTest, DISABLE_ComplexWordWithNegDoubleData)
 {
     struct label : elda::arinc429::data_descriptor<label, 1, 8, uint8_t>
     {
