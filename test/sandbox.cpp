@@ -6,9 +6,10 @@ int main()
     constexpr auto sum = std::integral_constant<int, eld::arinc429::detail::sum(4, 8, 15, 16) - 1>();
     static_assert(42 == sum, "");
 
-    struct label : eld::arinc429::data_descriptor<label, 1, 8, uint8_t>{};
+    struct label {};
+    using label_name = eld::arinc429::data_descriptor<label, 1, 8, uint8_t>;
 
-    using word_with_label_t = eld::arinc429::word_generic<label>;
+    using word_with_label_t = eld::arinc429::word_generic<label_name>;
 
     word_with_label_t wordWithLabel{07};
 

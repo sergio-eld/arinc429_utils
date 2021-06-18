@@ -220,17 +220,26 @@ namespace eld
                 using scale_factor_type = typename T::scale_factor_type;
             };
 
+            template <typename DataDescriptorT>
+            using name_type_t = typename data_descriptor_traits<DataDescriptorT>::name_type;
+
             using word_raw_type = uint32_t;
             constexpr size_t word_size = sizeof(word_raw_type) * CHAR_BIT;
+
+            template <typename DataDescriptor, typename NameType>
+            struct is_same_name_type : std::is_same<name_type_t<DataDescriptor>, NameType> {};
 
             template<typename NameType,
                      typename TupleDataDescriptors,
                      typename NotFoundPlaceholder = void>
             class get_data_descriptor
             {
-                struct placeholder_t;
+                struct placeholder_t
+                {
+                    using name_type = void;
+                };
                 using filtered_t =
-                    detail::filter_t<TupleDataDescriptors, std::is_same<placeholder_t, NameType>>;
+                    detail::filter_t<TupleDataDescriptors, is_same_name_type<placeholder_t, NameType>>;
                 static_assert(!std::is_void<NotFoundPlaceholder>() ||
                                   std::tuple_size<filtered_t>() != 0,
                               "Data descriptor not found!");
