@@ -5,6 +5,7 @@
 #include <ratio>
 #include <tuple>
 #include <type_traits>
+#include <limits>
 
 #include <cassert>
 #include <utility>
@@ -263,23 +264,34 @@ namespace eld
         namespace detail
         {
             template<typename T>
-            void get_integral_value(T & /*dest*/,
-                                    traits::word_raw_type /*wordRaw*/,
-                                    size_t /*lsb*/,
-                                    size_t /*msb*/,
+            void get_integral_value(T & dest,
+                                    traits::word_raw_type wordRaw,
+                                    size_t lsb,
+                                    size_t msb,
                                     std::false_type /*is_signed*/)
             {
-                // TODO: implement
+                uint8_t leftShift = 32 - msb;
+                uint8_t rightShift = lsb + leftShift - 1;
+                dest = wordRaw << leftShift >> rightShift;
             }
 
             template<typename T>
-            void get_integral_value(T & /*dest*/,
-                                    traits::word_raw_type /*wordRaw*/,
-                                    size_t /*lsb*/,
-                                    size_t /*msb*/,
+            void get_integral_value(T & dest,
+                                    traits::word_raw_type wordRaw,
+                                    size_t lsb,
+                                    size_t msb,
                                     std::true_type /*is_signed*/)
             {
-                // TODO: implement
+                uint32_t sign_bit = 0;
+                get_integral_value(sign_bit, wordRaw, msb, msb, std::false_type{});
+
+                uint32_t raw_value = 0;
+                get_integral_value(raw_value, wordRaw, lsb, msb - 1, std::false_type{});
+
+                uint32_t data_bits_count = msb - lsb + 1;
+                uint32_t valueWithSign = raw_value | (sign_bit << (data_bits_count - 1));
+                uint32_t shift = 32 - data_bits_count;
+                dest = int32_t(valueWithSign << shift) >> shift;
             }
 
             template<typename T>
@@ -296,7 +308,7 @@ namespace eld
 
             template<typename T>
             void get_value(T &dest,
-                           traits::word_raw_type /*wordRaw*/,
+                           traits::word_raw_type wordRaw,
                            size_t lsb,
                            size_t msb,
                            double scaleFactor,
@@ -305,7 +317,9 @@ namespace eld
                 static_assert(std::is_floating_point<T>(),
                               "Only floating point types are expected!");
 
-                // TODO: implement
+                int32_t raw_value = 0;
+                get_integral_value(raw_value, wordRaw, lsb, msb, std::true_type{});
+                dest = raw_value * scaleFactor;
             }
 
             template<typename DataDescriptor,
@@ -321,7 +335,7 @@ namespace eld
                           wordRaw,
                           traits_t::lsb(),
                           traits_t::msb(),
-                          double(scale_factor_t::num / scale_factor_t::den),
+                          double(scale_factor_t::num) / scale_factor_t::den,
                           std::is_floating_point<ValueType>());
             }
 
@@ -336,23 +350,34 @@ namespace eld
             }
 
             template<typename T>
-            void set_integral_value(const T & /*value*/,
-                                    traits::word_raw_type & /*wordRaw*/,
-                                    size_t /*lsb*/,
-                                    size_t /*msb*/,
+            void set_integral_value(const T & value,
+                                    traits::word_raw_type & wordRaw,
+                                    size_t lsb,
+                                    size_t msb,
                                     std::false_type /*is_signed*/)
             {
-                // TODO: implement
+                size_t unused_bit_count = 32 - (msb - lsb + 1);
+                uint32_t clamped_value = (uint32_t(value) << unused_bit_count) >> unused_bit_count;
+                clamped_value = clamped_value << (lsb - 1);
+
+                uint32_t right_erase =
+                    msb < 32 ? std::numeric_limits<traits::word_raw_type>::max() << msb : 0;
+                uint32_t left_erase =
+                    lsb > 1 ? std::numeric_limits<traits::word_raw_type>::max() >> (32 - lsb + 1) :
+                              0;
+
+                wordRaw = (wordRaw & (right_erase | left_erase)) | clamped_value;
             }
 
             template<typename T>
-            void set_integral_value(const T & /*value*/,
-                                    traits::word_raw_type & /*wordRaw*/,
-                                    size_t /*lsb*/,
-                                    size_t /*msb*/,
+            void set_integral_value(const T & value,
+                                    traits::word_raw_type & wordRaw,
+                                    size_t lsb,
+                                    size_t msb,
                                     std::true_type /*is_signed*/)
             {
-                // TODO: implement
+                set_integral_value(uint32_t(value), wordRaw, lsb, msb - 1, std::false_type{});
+                set_integral_value(uint32_t(value < 0 ? 1 : 0), wordRaw, msb, msb, std::false_type{});
             }
 
             template<typename T>
@@ -369,7 +394,7 @@ namespace eld
 
             template<typename T>
             void set_value(const T &value,
-                           traits::word_raw_type & /*wordRaw*/,
+                           traits::word_raw_type & wordRaw,
                            size_t lsb,
                            size_t msb,
                            double scaleFactor,
@@ -378,7 +403,7 @@ namespace eld
                 static_assert(std::is_floating_point<T>(),
                               "Only floating point types are expected!");
 
-                // TODO: implement
+                set_value(int32_t(value / scaleFactor), wordRaw, lsb, msb, 1, std::false_type {});
             }
 
             template<typename DataDescriptor,
@@ -394,7 +419,7 @@ namespace eld
                           wordRaw,
                           traits_t::lsb(),
                           traits_t::msb(),
-                          double(scale_factor_t::num / scale_factor_t::den),
+                          double(scale_factor_t::num) / scale_factor_t::den,
                           std::is_floating_point<ValueType>());
             }
 
@@ -456,7 +481,7 @@ namespace eld
                      typename traits::data_descriptor_traits<DataDescriptor>::value_type>
         void set_value(const ValueType &value, traits::word_raw_type &wordRaw)
         {
-            detail::get_value<DataDescriptor>(value,
+            detail::set_value<DataDescriptor>(value,
                                               wordRaw,
                                               traits::defines_getter<DataDescriptor, ValueType>());
         }
@@ -553,7 +578,7 @@ namespace eld
                  typename ScaleFactorT = std::ratio<1, 1>>
         struct data_descriptor
         {
-            static_assert(LSB < MSB, "Invalid bit range!");
+            static_assert(LSB <= MSB, "Invalid bit range!");
             static_assert(MSB <= traits::word_size, "MSB exceeds maximum index");
 
             /**
