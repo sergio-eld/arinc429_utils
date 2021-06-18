@@ -5,9 +5,13 @@
 #include <ratio>
 #include <tuple>
 #include <type_traits>
+#include <limits>
 
 #include <cassert>
 #include <utility>
+
+#include <bitset>
+#include <iostream>
 
 /**
  * This is a header-only utility library for ARINC 429 data protocol.
@@ -272,15 +276,15 @@ namespace eld
                                     size_t msb,
                                     std::true_type /*is_signed*/)
             {
-                uint32_t sign = 0;
-                get_integral_value(sign, wordRaw, msb, msb, std::false_type{});
+                uint32_t sign_bit = 0;
+                get_integral_value(sign_bit, wordRaw, msb, msb, std::false_type{});
 
                 uint32_t raw_value = 0;
                 get_integral_value(raw_value, wordRaw, lsb, msb - 1, std::false_type{});
 
-                uint32_t bit_count = msb - lsb;
-                uint32_t valueWithSign = raw_value | (sign << bit_count);
-                uint32_t shift = 32 - (bit_count + 1);
+                uint32_t data_bits_count = msb - lsb + 1;
+                uint32_t valueWithSign = raw_value | (sign_bit << (data_bits_count - 1));
+                uint32_t shift = 32 - data_bits_count;
                 dest = int32_t(valueWithSign << shift) >> shift;
             }
 
@@ -349,7 +353,13 @@ namespace eld
                 size_t unused_bit_count = 32 - (msb - lsb + 1);
                 uint32_t clamped_value = (uint32_t(value) << unused_bit_count) >> unused_bit_count;
                 clamped_value = clamped_value << (lsb - 1);
-                wordRaw = wordRaw | clamped_value;
+
+                uint32_t right_erase = std::numeric_limits<traits::word_raw_type>::max() << msb;
+                uint32_t left_erase =
+                    lsb > 1 ? std::numeric_limits<traits::word_raw_type>::max() >> (32 - lsb + 1) :
+                              0;
+
+                wordRaw = (wordRaw & (right_erase | left_erase)) | clamped_value;
             }
 
             template<typename T>
