@@ -224,17 +224,26 @@ namespace eld
                 using scale_factor_type = typename T::scale_factor_type;
             };
 
+            template <typename DataDescriptorT>
+            using name_type_t = typename data_descriptor_traits<DataDescriptorT>::name_type;
+
             using word_raw_type = uint32_t;
             constexpr size_t word_size = sizeof(word_raw_type) * CHAR_BIT;
+
+            template <typename DataDescriptor, typename NameType>
+            struct is_same_name_type : std::is_same<name_type_t<DataDescriptor>, NameType> {};
 
             template<typename NameType,
                      typename TupleDataDescriptors,
                      typename NotFoundPlaceholder = void>
             class get_data_descriptor
             {
-                struct placeholder_t;
+                struct placeholder_t
+                {
+                    using name_type = void;
+                };
                 using filtered_t =
-                    detail::filter_t<TupleDataDescriptors, std::is_same<placeholder_t, NameType>>;
+                    detail::filter_t<TupleDataDescriptors, is_same_name_type<placeholder_t, NameType>>;
                 static_assert(!std::is_void<NotFoundPlaceholder>() ||
                                   std::tuple_size<filtered_t>() != 0,
                               "Data descriptor not found!");
@@ -494,9 +503,16 @@ namespace eld
 
         public:
             constexpr explicit word_generic(traits::word_raw_type rawWord)   //
-              : rawWord_(rawWord)
+              : raw_word_(rawWord)
             {
             }
+
+            word_generic(const word_generic&) = default;
+            word_generic(word_generic&&) noexcept = default;
+
+            word_generic& operator=(const word_generic&) = default;
+            word_generic& operator=(word_generic&&) noexcept = default;
+
 
             // TODO: implement get and set via index, struct type (name) and string name
             template<typename NameType,
@@ -507,7 +523,7 @@ namespace eld
                     traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
                 typename data_descriptor_t::value_type retVal{};
-                get_value<data_descriptor_t>(retVal, rawWord_);
+                get_value<data_descriptor_t>(retVal, raw_word_);
 
                 return retVal;
             }
@@ -523,11 +539,31 @@ namespace eld
                 using data_descriptor_t =
                     traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
 
-                set_value<data_descriptor_t>(value, rawWord_);
+                set_value<data_descriptor_t>(value, raw_word_);
+            }
+
+            traits::word_raw_type get_raw() const
+            {
+                return raw_word_;
+            }
+
+            void set_raw(traits::word_raw_type rawWord)
+            { raw_word_ = rawWord;
+            }
+
+            explicit operator traits::word_raw_type() const
+            {
+                return get_raw();
+            }
+
+            template <typename ... ArgsT>
+            explicit operator word_generic<ArgsT...>() const
+            {
+                return word_generic<ArgsT...>(get_raw());
             }
 
         private:
-            traits::word_raw_type rawWord_;
+            traits::word_raw_type raw_word_;
         };
 
         // TODO: add customization for data retrieval.
