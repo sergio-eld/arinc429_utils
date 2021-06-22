@@ -522,6 +522,8 @@ namespace eld
             {
             }
 
+            constexpr word_generic() = default;
+
             word_generic(const word_generic &) = default;
             word_generic(word_generic &&) noexcept = default;
 
