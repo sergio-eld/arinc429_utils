@@ -221,26 +221,38 @@ namespace eld
                 using scale_factor_type = typename T::scale_factor_type;
             };
 
-            template <typename DataDescriptorT>
+            template<typename DataDescriptorT>
             using name_type_t = typename data_descriptor_traits<DataDescriptorT>::name_type;
+
+            template<typename DataDescriptorT>
+            using value_type_t = typename data_descriptor_traits<DataDescriptorT>::value_type;
+
+            template<typename DataDescriptorT>
+            using scale_factor_type_t = typename data_descriptor_traits<DataDescriptorT>::scale_factor_type;
 
             using word_raw_type = uint32_t;
             constexpr size_t word_size = sizeof(word_raw_type) * CHAR_BIT;
 
-            template <typename DataDescriptor, typename NameType>
-            struct is_same_name_type : std::is_same<name_type_t<DataDescriptor>, NameType> {};
+            template<typename DataDescriptor, typename NameType>
+            struct is_same_name_type : std::is_same<name_type_t<DataDescriptor>, NameType>
+            {
+            };
 
-            template<typename NameType,
-                     typename TupleDataDescriptors,
-                     typename NotFoundPlaceholder = void>
+            template <typename WordT>
+            struct word_traits
+            {
+                using tuple_descriptors = typename WordT::tuple_descriptors;
+            };
+
+            template<typename NameType, typename WordType, typename NotFoundPlaceholder = void>
             class get_data_descriptor
             {
                 struct placeholder_t
                 {
                     using name_type = void;
                 };
-                using filtered_t =
-                    detail::filter_t<TupleDataDescriptors, is_same_name_type<placeholder_t, NameType>>;
+                using filtered_t = detail::filter_t<typename WordType::tuple_descriptors,
+                                                    is_same_name_type<placeholder_t, NameType>>;
                 static_assert(!std::is_void<NotFoundPlaceholder>() ||
                                   std::tuple_size<filtered_t>() != 0,
                               "Data descriptor not found!");
@@ -497,31 +509,36 @@ namespace eld
                                       traits::data_descriptor_traits<DataDescriptors>::lsb()...) <=
                               traits::word_size,
                           "Size of data exceeds size of arinc 429 word!");
+
+            using word_type_t = word_generic<DataDescriptors...>;
+
             // TODO: check that struct types are unique
 
         public:
+            using tuple_descriptors = std::tuple<DataDescriptors...>;
+
             constexpr explicit word_generic(traits::word_raw_type rawWord)   //
               : raw_word_(rawWord)
             {
             }
 
-            word_generic(const word_generic&) = default;
-            word_generic(word_generic&&) noexcept = default;
+            constexpr word_generic() = default;
 
-            word_generic& operator=(const word_generic&) = default;
-            word_generic& operator=(word_generic&&) noexcept = default;
+            word_generic(const word_generic &) = default;
+            word_generic(word_generic &&) noexcept = default;
 
+            word_generic &operator=(const word_generic &) = default;
+            word_generic &operator=(word_generic &&) noexcept = default;
 
             // TODO: implement get and set via index, struct type (name) and string name
             template<typename NameType,
                      typename = typename std::enable_if<true /*TODO: implement*/>::type>
             constexpr auto get()
             {
-                using data_descriptor_t =
-                    traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
+                using data_descriptor_t = traits::get_data_descriptor_t<NameType, word_type_t>;
 
                 typename data_descriptor_t::value_type retVal{};
-                get_value<data_descriptor_t>(retVal, raw_word_);
+                arinc429::get_value<data_descriptor_t>(retVal, raw_word_);
 
                 return retVal;
             }
@@ -534,27 +551,18 @@ namespace eld
                     type>
             constexpr void set(const T &value)
             {
-                using data_descriptor_t =
-                    traits::get_data_descriptor_t<NameType, std::tuple<DataDescriptors...>>;
+                using data_descriptor_t = traits::get_data_descriptor_t<NameType, word_type_t>;
 
-                set_value<data_descriptor_t>(value, raw_word_);
+                arinc429::set_value<data_descriptor_t>(value, raw_word_);
             }
 
-            traits::word_raw_type get_raw() const
-            {
-                return raw_word_;
-            }
+            traits::word_raw_type get_raw() const { return raw_word_; }
 
-            void set_raw(traits::word_raw_type rawWord)
-            { raw_word_ = rawWord;
-            }
+            void set_raw(traits::word_raw_type rawWord) { raw_word_ = rawWord; }
 
-            explicit operator traits::word_raw_type() const
-            {
-                return get_raw();
-            }
+            explicit operator traits::word_raw_type() const { return get_raw(); }
 
-            template <typename ... ArgsT>
+            template<typename... ArgsT>
             explicit operator word_generic<ArgsT...>() const
             {
                 return word_generic<ArgsT...>(get_raw());
@@ -597,6 +605,78 @@ namespace eld
             using name_type = NameType;
             using scale_factor_type = ScaleFactorT;
         };
+
+        /**
+         * Helper class to facilitate "direct" data modification.
+         * @tparam NameType
+         * @tparam WordType
+         */
+        template<typename NameType, typename WordType>
+        class modifier
+        {
+        public:
+            using name_type = NameType;
+            using value_type =
+                traits::value_type_t<traits::get_data_descriptor_t<NameType, WordType>>;
+            using word_type = WordType;
+
+            static_assert(!std::is_void<value_type>(), "Word does not contain NameType");
+
+            constexpr explicit modifier(word_type &word) : word_(word) {}
+
+            template<
+                typename ValueT,
+                typename = typename std::enable_if<std::is_same<value_type, ValueT>::value>::type>
+            modifier &operator+=(const ValueT &a_val)
+            {
+                value_type val = word_.template get<name_type>();
+                val += a_val;
+                word_.template set<name_type>(val);
+                return *this;
+            }
+
+            template<
+                typename ValueT,
+                typename = typename std::enable_if<std::is_same<value_type, ValueT>::value>::type>
+            modifier &operator-=(const ValueT &a_val)
+            {
+                value_type val = word_.template get<name_type>();
+                val -= a_val;
+                word_.template set<name_type>(val);
+                return *this;
+            }
+
+            template<
+                typename ValueT,
+                typename = typename std::enable_if<std::is_same<value_type, ValueT>::value>::type>
+            modifier &operator|=(const ValueT &a_val)
+            {
+                value_type val = word_.template get<name_type>();
+                val |= a_val;
+                word_.template set<name_type>(val);
+                return *this;
+            }
+
+            template<
+                typename ValueT,
+                typename = typename std::enable_if<std::is_same<value_type, ValueT>::value>::type>
+            modifier &operator&=(const ValueT &a_val)
+            {
+                value_type val = word_.template get<name_type>();
+                val &= a_val;
+                word_.template set<name_type>(val);
+                return *this;
+            }
+
+        private:
+            word_type &word_;
+        };
+
+        template<typename NameType, typename WordType>
+        modifier<NameType, WordType> modify(WordType &word)
+        {
+            return modifier<NameType, WordType>(word);
+        }
 
     }
 }
