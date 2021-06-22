@@ -14,6 +14,7 @@ int main()
     word_with_label_t wordWithLabel{07};
 
     auto labelValue = wordWithLabel.get<label>();
+    (void)labelValue;
     wordWithLabel.set<label>(011);
 
     static_assert(std::is_same<uint8_t, eld::arinc429::traits::value_type_t<label_descriptor>>(), "");
