@@ -190,7 +190,7 @@ namespace eld
                 T,
                 ValueType,
                 detail::void_t<decltype(std::declval<T>()(std::declval<ValueType>(),
-                                                          word_raw_type(),
+                                                          std::declval<word_raw_type&>(),
                                                           tag_set()))>> : std::true_type
             {
             };

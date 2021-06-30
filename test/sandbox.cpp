@@ -33,7 +33,7 @@ int main()
 
     struct with_getter_and_setter
     {
-        void operator()(const int&, eld::arinc429::traits::word_raw_type, eld::arinc429::tag_set)
+        void operator()(const int&, eld::arinc429::traits::word_raw_type&, eld::arinc429::tag_set)
         {}
 
         void operator()(int&, eld::arinc429::traits::word_raw_type, eld::arinc429::tag_get)
