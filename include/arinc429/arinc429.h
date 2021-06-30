@@ -2,10 +2,10 @@
 
 #include <climits>
 #include <cstdint>
+#include <limits>
 #include <ratio>
 #include <tuple>
 #include <type_traits>
-#include <limits>
 
 #include <cassert>
 #include <utility>
@@ -120,6 +120,9 @@ namespace eld
 
         namespace traits
         {
+            using word_raw_type = uint32_t;
+            constexpr size_t word_size = sizeof(word_raw_type) * CHAR_BIT;
+
             template<typename T, typename = void>
             struct defines_lsb : std::false_type
             {
@@ -171,8 +174,9 @@ namespace eld
             struct defines_getter<
                 T,
                 ValueType,
-                detail::void_t<decltype(std::declval<T>()(std::declval<ValueType>(), tag_get()))>> :
-              std::true_type
+                detail::void_t<decltype(std::declval<T>()(std::declval<ValueType&>(),
+                                                          word_raw_type(),
+                                                          tag_get()))>> : std::true_type
             {
             };
 
@@ -185,7 +189,8 @@ namespace eld
             struct defines_setter<
                 T,
                 ValueType,
-                detail::void_t<decltype(std::declval<T>()(std::declval<const ValueType>(),
+                detail::void_t<decltype(std::declval<T>()(std::declval<ValueType>(),
+                                                          word_raw_type(),
                                                           tag_set()))>> : std::true_type
             {
             };
@@ -228,17 +233,15 @@ namespace eld
             using value_type_t = typename data_descriptor_traits<DataDescriptorT>::value_type;
 
             template<typename DataDescriptorT>
-            using scale_factor_type_t = typename data_descriptor_traits<DataDescriptorT>::scale_factor_type;
-
-            using word_raw_type = uint32_t;
-            constexpr size_t word_size = sizeof(word_raw_type) * CHAR_BIT;
+            using scale_factor_type_t =
+                typename data_descriptor_traits<DataDescriptorT>::scale_factor_type;
 
             template<typename DataDescriptor, typename NameType>
             struct is_same_name_type : std::is_same<name_type_t<DataDescriptor>, NameType>
             {
             };
 
-            template <typename WordT>
+            template<typename WordT>
             struct word_traits
             {
                 using tuple_descriptors = typename WordT::tuple_descriptors;
@@ -276,7 +279,7 @@ namespace eld
         namespace detail
         {
             template<typename T>
-            void get_integral_value(T & dest,
+            void get_integral_value(T &dest,
                                     traits::word_raw_type wordRaw,
                                     size_t lsb,
                                     size_t msb,
@@ -288,7 +291,7 @@ namespace eld
             }
 
             template<typename T>
-            void get_integral_value(T & dest,
+            void get_integral_value(T &dest,
                                     traits::word_raw_type wordRaw,
                                     size_t lsb,
                                     size_t msb,
@@ -362,8 +365,8 @@ namespace eld
             }
 
             template<typename T>
-            void set_integral_value(const T & value,
-                                    traits::word_raw_type & wordRaw,
+            void set_integral_value(const T &value,
+                                    traits::word_raw_type &wordRaw,
                                     size_t lsb,
                                     size_t msb,
                                     std::false_type /*is_signed*/)
@@ -382,14 +385,18 @@ namespace eld
             }
 
             template<typename T>
-            void set_integral_value(const T & value,
-                                    traits::word_raw_type & wordRaw,
+            void set_integral_value(const T &value,
+                                    traits::word_raw_type &wordRaw,
                                     size_t lsb,
                                     size_t msb,
                                     std::true_type /*is_signed*/)
             {
                 set_integral_value(uint32_t(value), wordRaw, lsb, msb - 1, std::false_type{});
-                set_integral_value(uint32_t(value < 0 ? 1 : 0), wordRaw, msb, msb, std::false_type{});
+                set_integral_value(uint32_t(value < 0 ? 1 : 0),
+                                   wordRaw,
+                                   msb,
+                                   msb,
+                                   std::false_type{});
             }
 
             template<typename T>
@@ -406,7 +413,7 @@ namespace eld
 
             template<typename T>
             void set_value(const T &value,
-                           traits::word_raw_type & wordRaw,
+                           traits::word_raw_type &wordRaw,
                            size_t lsb,
                            size_t msb,
                            double scaleFactor,
@@ -415,7 +422,7 @@ namespace eld
                 static_assert(std::is_floating_point<T>(),
                               "Only floating point types are expected!");
 
-                set_value(int32_t(value / scaleFactor), wordRaw, lsb, msb, 1, std::false_type {});
+                set_value(int32_t(value / scaleFactor), wordRaw, lsb, msb, 1, std::false_type{});
             }
 
             template<typename DataDescriptor,
@@ -499,7 +506,7 @@ namespace eld
         }
 
         /**
-         *
+         * Generic class used to define types for custom ARINC 429 words.
          * @tparam DataDescriptors
          */
         template<typename... DataDescriptors>

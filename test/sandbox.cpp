@@ -1,6 +1,8 @@
 ﻿
 #include "arinc429/arinc429.h"
 
+namespace arinc429 = eld::arinc429;
+
 int main()
 {
     constexpr auto sum = std::integral_constant<int, eld::arinc429::detail::sum(4, 8, 15, 16) - 1>();
@@ -28,6 +30,18 @@ int main()
     auto label_modifier = eld::arinc429::modify<label>(wordWithLabel);
 
     label_modifier += uint8_t(26);
+
+    struct with_getter_and_setter
+    {
+        void operator()(const int&, eld::arinc429::traits::word_raw_type, eld::arinc429::tag_set)
+        {}
+
+        void operator()(int&, eld::arinc429::traits::word_raw_type, eld::arinc429::tag_get)
+        {}
+    };
+
+    static_assert(eld::arinc429::traits::defines_getter<with_getter_and_setter, int>(), "");
+    static_assert(eld::arinc429::traits::defines_setter<with_getter_and_setter, int>(), "");
 
     return 0;
 }
