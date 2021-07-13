@@ -502,7 +502,7 @@ namespace eld
         {
             detail::set_value<DataDescriptor>(value,
                                               wordRaw,
-                                              traits::defines_getter<DataDescriptor, ValueType>());
+                                              traits::defines_setter<DataDescriptor, ValueType>());
         }
 
         /**
