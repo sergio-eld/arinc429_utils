@@ -496,7 +496,7 @@ TEST(SetAndGetWordTests, NegDoubleDataWord)
     EXPECT_EQ(exp_parity, wordWithLabel.get<parity>());
 }
 
-TEST(CustomizationTests, Set)
+TEST(CustomizationTests, CustomizedSetter)
 {
     constexpr uint32_t scale_factor = 16;
 
@@ -509,14 +509,6 @@ TEST(CustomizationTests, Set)
             value_type to_set_value = value / scale_factor;
             eld::arinc429::detail::set_value<data>(to_set_value, raw_word, std::false_type{});
         }
-//
-//        void operator()(value_type &dest,
-//                        eld::arinc429::traits::word_raw_type raw_word,
-//                        eld::arinc429::tag_get)
-//        {
-//            eld::arinc429::detail::get_value<data>(dest, raw_word, std::false_type{});
-//            dest *= scale_factor;
-//        }
     };
 
     uint32_t set_value = 32;
@@ -532,20 +524,12 @@ TEST(CustomizationTests, Set)
     EXPECT_EQ(get_value, expected_value);
 }
 
-TEST(CustomizationTests, Get)
+TEST(CustomizationTests, CustomizedGetter)
 {
     constexpr uint32_t scale_factor = 32;
 
     struct data : eld::arinc429::data_descriptor<data, 9, 29, uint32_t>
     {
-//        void operator()(value_type value,
-//                        eld::arinc429::traits::word_raw_type &raw_word,
-//                        eld::arinc429::tag_set)
-//        {
-//            value_type to_set_value = value / scale_factor;
-//            eld::arinc429::detail::set_value<data>(to_set_value, raw_word, std::false_type{});
-//        }
-
         void operator()(value_type &dest,
                         eld::arinc429::traits::word_raw_type raw_word,
                         eld::arinc429::tag_get)
@@ -568,7 +552,7 @@ TEST(CustomizationTests, Get)
     EXPECT_EQ(get_value, expected_value);
 }
 
-TEST(CustomizationTests, Complex)
+TEST(CustomizationTests, CustomizedSetterAndGetter)
 {
     constexpr uint32_t scale_factor = 32;
 
