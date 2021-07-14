@@ -496,6 +496,97 @@ TEST(SetAndGetWordTests, NegDoubleDataWord)
     EXPECT_EQ(exp_parity, wordWithLabel.get<parity>());
 }
 
+TEST(CustomizationTests, CustomizedSetter)
+{
+    constexpr uint32_t scale_factor = 16;
+
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, uint32_t>
+    {
+        void operator()(value_type value,
+                        eld::arinc429::traits::word_raw_type &raw_word,
+                        eld::arinc429::tag_set)
+        {
+            value_type to_set_value = value / scale_factor;
+            eld::arinc429::detail::set_value<data>(to_set_value, raw_word, std::false_type{});
+        }
+    };
+
+    uint32_t set_value = 32;
+    uint32_t expected_value = set_value / scale_factor;
+
+    using word_type = eld::arinc429::word_generic<data>;
+
+    word_type word{ 0 };
+    word.set<data>(set_value);
+
+    auto get_value = word.get<data>();
+
+    EXPECT_EQ(get_value, expected_value);
+}
+
+TEST(CustomizationTests, CustomizedGetter)
+{
+    constexpr uint32_t scale_factor = 32;
+
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, uint32_t>
+    {
+        void operator()(value_type &dest,
+                        eld::arinc429::traits::word_raw_type raw_word,
+                        eld::arinc429::tag_get)
+        {
+            eld::arinc429::detail::get_value<data>(dest, raw_word, std::false_type{});
+            dest *= scale_factor;
+        }
+    };
+
+    uint32_t set_value = 20;
+    uint32_t expected_value = set_value * scale_factor;
+
+    using word_type = eld::arinc429::word_generic<data>;
+
+    word_type word{ 0 };
+    word.set<data>(set_value);
+
+    auto get_value = word.get<data>();
+
+    EXPECT_EQ(get_value, expected_value);
+}
+
+TEST(CustomizationTests, CustomizedSetterAndGetter)
+{
+    constexpr uint32_t scale_factor = 32;
+
+    struct data : eld::arinc429::data_descriptor<data, 9, 29, uint32_t>
+    {
+        void operator()(value_type value,
+                        eld::arinc429::traits::word_raw_type &raw_word,
+                        eld::arinc429::tag_set)
+        {
+            value_type to_set_value = value / scale_factor;
+            eld::arinc429::detail::set_value<data>(to_set_value, raw_word, std::false_type{});
+        }
+
+        void operator()(value_type &dest,
+                        eld::arinc429::traits::word_raw_type raw_word,
+                        eld::arinc429::tag_get)
+        {
+            eld::arinc429::detail::get_value<data>(dest, raw_word, std::false_type{});
+            dest *= scale_factor;
+        }
+    };
+
+    uint32_t set_value = 64;
+
+    using word_type = eld::arinc429::word_generic<data>;
+
+    word_type word{ 0 };
+    word.set<data>(set_value);
+
+    auto get_value = word.get<data>();
+
+    EXPECT_EQ(get_value, set_value);
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
